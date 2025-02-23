@@ -2,13 +2,17 @@ require('dotenv').config();
 const express = require('express');
 const app = express();
 const cors = require('cors');
-const port =  4564;
-const port1 =  4565;
+const port = process.env.PORT || 4564;
+const port1 =  4564;
 const mongoose = require("mongoose");
 
 // const app = express.init();
 const server = require("http").createServer(app);
-const io = require("socket.io")(server);
+const io = require("socket.io")(server, {
+    cors: {
+      origin: '*',
+    }
+});
 
 
 app.use(cors());
@@ -29,7 +33,7 @@ io.of("/socket").on("connection", (socket) => {
 //start the server
 server.listen(port1, () => console.log(`Server now running on port ${port1}!`));
 
-
+console.log("Okdgjnxd")
 const mongoURI = `mongodb+srv://${process.env.DB_UESR}:${process.env.DB_PASS}@cluster0.4allx.mongodb.net/TMSDatabase?retryWrites=true&w=majority&appName=Cluster0`;
 
 mongoose
@@ -42,7 +46,9 @@ mongoose
     .catch((err) => console.error("MongoDB connection error:", err))
     ;
 
-const connection = mongoose.connection
+console.log("dklgxdlkgnhdsz");
+
+const connection = mongoose.connection;
 connection.once("open", () => {
     console.log("MongoDB database connected");
     
@@ -157,11 +163,11 @@ const userCollection = mongoose.model('User', new mongoose.Schema({
 //api for get task
 app.get('/tasks/:email', async (req, res) => {
     const email = req.params.email;
-    console.log(email);
+    // console.log(email);
     // const query = { taskOwner: email };
     const query = {taskOwner: email};
     const result = await taskCollection.find(query);
-    console.log(result);
+    // console.log(result);
     res.send(result);
     // const result = await userCollection.find();
     // res.json(result);
@@ -184,6 +190,18 @@ app.delete('/tasks/:id', async(req, res) => {
     console.log(id)
     // const query = { _id: new ObjectId(id) };
     const result = await taskCollection.findByIdAndDelete(id);
+    console.log(result)
+    res.send(result);
+})
+
+app.put('/taskUpdate/:id', async(req, res) => {
+    const id = req.params.id;
+    console.log(id);
+    const container = req.body.targetContainer;
+    const update = { category: container };
+    console.log(container)
+    // const query = { _id: new ObjectId(id) };
+    const result = await taskCollection.findByIdAndUpdate(id,update);
     console.log(result)
     res.send(result);
 })
@@ -219,6 +237,6 @@ app.get('/', async (req, res) => {
     res.send("TMS is started...");
 })
 
-app.listen(port, () => {
-    console.log(`TMS is waiting at port ${port}`)
-})
+// app.listen(port, () => {
+//     console.log(`TMS is waiting at port ${port}`)
+// })
