@@ -6,6 +6,8 @@ const port = process.env.PORT || 4564;
 const port1 = 4564;
 const mongoose = require("mongoose");
 
+let updatedTaskData;
+
 // const app = express.init();
 const server = require("http").createServer(app);
 const io = require("socket.io")(server, {
@@ -74,13 +76,24 @@ connection.once("open", () => {
                 break;
 
             case "update":
+                upTitle = change.updateDescription.updatedFields.title;
+                upDesc = change.updateDescription.updatedFields.description;
+                console.log(upTitle);
+                console.log(upDesc);
+                console.log(updatedTaskData.description);
                 const updatetask = {
                     _id: change.documentKey._id,
-                    title: change.updateDescription.updatedFields.title,
-                    description: change.updateDescription.updatedFields.description,
-                    category: "To-Do",
+                    title: (upTitle !== undefined) ? upTitle : updatedTaskData.title,
+                    description:  (upDesc !== undefined) ? upDesc : updatedTaskData.description,
+                    category: updatedTaskData.category,
                 };
-                io.of("/socket").emit("updateTask", updatetask);
+                if(change.updateDescription.updatedFields.description || change.updateDescription.updatedFields.title){
+                    console.log("updatetask");
+                    console.log(updatetask);
+                    console.log(updatedTaskData);
+                    io.of("/socket").emit("updateTask", updatetask);
+                }
+                
                 break;
         }
     });
@@ -211,7 +224,7 @@ app.put('/taskUpdate/:id', async (req, res) => {
     console.log(id);
     const container = req.body.targetContainer;
     const update = { category: container };
-    console.log(container)
+    console.log("update----",container)
     // const query = { _id: new ObjectId(id) };
     const result = await taskCollection.findByIdAndUpdate(id, update);
     console.log(result)
@@ -224,7 +237,9 @@ app.put('/UpdateTaskProperty/:id', async (req, res) => {
     console.log(id);
     const UpdatedItem = req.body.UpdatedItem;
     const update = { title: UpdatedItem.updatedTitle, description: UpdatedItem.updatedDesc };
+    updatedTaskData =  Object.assign(update, {"category": UpdatedItem.category});
     console.log(UpdatedItem)
+    
     // // const query = { _id: new ObjectId(id) };
     const result = await taskCollection.findByIdAndUpdate(id, update);
     console.log(result)
