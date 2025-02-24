@@ -3,14 +3,14 @@ const express = require('express');
 const app = express();
 const cors = require('cors');
 const port = process.env.PORT || 4564;
-const port1 =  4564;
+const port1 = 4564;
 const mongoose = require("mongoose");
 
 // const app = express.init();
 const server = require("http").createServer(app);
 const io = require("socket.io")(server, {
     cors: {
-      origin: '*',
+        origin: '*',
     }
 });
 
@@ -24,12 +24,12 @@ app.use(express.json());
 
 io.of("/socket").on("connection", (socket) => {
     console.log("socket.io: User connected: ", socket.id);
-  
+
     socket.on("disconnect", () => {
-      console.log("socket.io: User disconnected: ", socket.id);
+        console.log("socket.io: User disconnected: ", socket.id);
     });
-  });
-  
+});
+
 //start the server
 server.listen(port1, () => console.log(`Server now running on port ${port1}!`));
 
@@ -51,29 +51,40 @@ console.log("dklgxdlkgnhdsz");
 const connection = mongoose.connection;
 connection.once("open", () => {
     console.log("MongoDB database connected");
-    
+
     console.log("Setting change streams");
     const taskChangeStream = connection.collection("Tasks").watch();
-    
+
     taskChangeStream.on("change", (change) => {
+        console.log(change); 
         switch (change.operationType) {
-        case "insert":
-            const newtask = {
-            _id: change.fullDocument._id,
-            title: change.fullDocument.title,
-            description: change.fullDocument.description,
-            category: change.fullDocument.category,
-            };
-    
-            io.of("/socket").emit("newTask", newtask);
-            break;
-    
-        case "delete":
-            io.of("/socket").emit("deletedTask", change.documentKey._id);
-            break;
+            case "insert":
+                const newtask = {
+                    _id: change.fullDocument._id,
+                    title: change.fullDocument.title,
+                    description: change.fullDocument.description,
+                    category: change.fullDocument.category,
+                };
+
+                io.of("/socket").emit("newTask", newtask);
+                break;
+
+            case "delete":
+                io.of("/socket").emit("deletedTask", change.documentKey._id);
+                break;
+
+            case "update":
+                const updatetask = {
+                    _id: change.documentKey._id,
+                    title: change.updateDescription.updatedFields.title,
+                    description: change.updateDescription.updatedFields.description,
+                    category: "To-Do",
+                };
+                io.of("/socket").emit("updateTask", updatetask);
+                break;
         }
     });
-    });
+});
 // const database = mongoose.connection;
 // const userCollection = database.collection("Users");
 // const taskCollection = database.collection("Tasks");
@@ -119,7 +130,7 @@ const TaskSchema = new mongoose.Schema({
     },
 });
 
-const taskCollection = mongoose.model("Tasks", TaskSchema,"Tasks");
+const taskCollection = mongoose.model("Tasks", TaskSchema, "Tasks");
 
 
 
@@ -159,13 +170,13 @@ const taskCollection = mongoose.model("Tasks", TaskSchema,"Tasks");
 const userCollection = mongoose.model('User', new mongoose.Schema({
     name: { type: String },
     email: { type: String }
-}),'Users');
+}), 'Users');
 //api for get task
 app.get('/tasks/:email', async (req, res) => {
     const email = req.params.email;
     // console.log(email);
     // const query = { taskOwner: email };
-    const query = {taskOwner: email};
+    const query = { taskOwner: email };
     const result = await taskCollection.find(query);
     // console.log(result);
     res.send(result);
@@ -185,7 +196,7 @@ app.post('/tasks', async (req, res) => {
 });
 
 //api for delete tasks
-app.delete('/tasks/:id', async(req, res) => {
+app.delete('/tasks/:id', async (req, res) => {
     const id = req.params.id;
     console.log(id)
     // const query = { _id: new ObjectId(id) };
@@ -194,14 +205,28 @@ app.delete('/tasks/:id', async(req, res) => {
     res.send(result);
 })
 
-app.put('/taskUpdate/:id', async(req, res) => {
+//api for update task's category
+app.put('/taskUpdate/:id', async (req, res) => {
     const id = req.params.id;
     console.log(id);
     const container = req.body.targetContainer;
     const update = { category: container };
     console.log(container)
     // const query = { _id: new ObjectId(id) };
-    const result = await taskCollection.findByIdAndUpdate(id,update);
+    const result = await taskCollection.findByIdAndUpdate(id, update);
+    console.log(result)
+    res.send(result);
+})
+
+//api for update task's properties
+app.put('/UpdateTaskProperty/:id', async (req, res) => {
+    const id = req.params.id;
+    console.log(id);
+    const UpdatedItem = req.body.UpdatedItem;
+    const update = { title: UpdatedItem.updatedTitle, description: UpdatedItem.updatedDesc };
+    console.log(UpdatedItem)
+    // // const query = { _id: new ObjectId(id) };
+    const result = await taskCollection.findByIdAndUpdate(id, update);
     console.log(result)
     res.send(result);
 })
