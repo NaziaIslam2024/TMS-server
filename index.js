@@ -80,12 +80,20 @@ connection.once("open", () => {
                 upDesc = change.updateDescription.updatedFields.description;
                 console.log(upTitle);
                 console.log(upDesc);
-                console.log(updatedTaskData.description);
+                console.log(change.fullDocumentBeforeChange)
+                console.log("updatedTaskData");
+                // console.log(updatedTaskData);
+                // const updatetask = {
+                //     _id: change.documentKey._id,
+                //     title: (upTitle !== undefined) ? upTitle : updatedTaskData.title,
+                //     description:  (upDesc !== undefined) ? upDesc : updatedTaskData.description,
+                //     category: updatedTaskData.category,
+                // };
                 const updatetask = {
                     _id: change.documentKey._id,
-                    title: (upTitle !== undefined) ? upTitle : updatedTaskData.title,
-                    description:  (upDesc !== undefined) ? upDesc : updatedTaskData.description,
-                    category: updatedTaskData.category,
+                    title: upTitle ,
+                    description:  upDesc ,
+                    category: "To-Do",
                 };
                 if(change.updateDescription.updatedFields.description || change.updateDescription.updatedFields.title){
                     console.log("updatetask");
@@ -237,7 +245,7 @@ app.put('/UpdateTaskProperty/:id', async (req, res) => {
     console.log(id);
     const UpdatedItem = req.body.UpdatedItem;
     const update = { title: UpdatedItem.updatedTitle, description: UpdatedItem.updatedDesc };
-    updatedTaskData =  Object.assign(update, {"category": UpdatedItem.category});
+    // updatedTaskData =  Object.assign(update, {"category": UpdatedItem.category});
     console.log(UpdatedItem)
     
     // // const query = { _id: new ObjectId(id) };
