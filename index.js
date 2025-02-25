@@ -50,6 +50,35 @@ mongoose
 
 console.log("dklgxdlkgnhdsz");
 
+const TaskSchema = new mongoose.Schema({
+    title: {
+        type: String,
+        unique: false,
+        required: true,
+    },
+    description: {
+        type: String,
+        unique: false,
+        required: true,
+    },
+    taskOwner: {
+        type: String,
+        unique: false,
+        required: true,
+    },
+    timeStamp: {
+        type: Number,
+        required: true,
+    },
+    category: {
+        type: String,
+        unique: false,
+        required: true,
+    },
+});
+
+const taskCollection = mongoose.model("Tasks", TaskSchema, "Tasks");
+
 const connection = mongoose.connection;
 connection.once("open", () => {
     console.log("MongoDB database connected");
@@ -80,8 +109,11 @@ connection.once("open", () => {
                 upDesc = change.updateDescription.updatedFields.description;
                 console.log(upTitle);
                 console.log(upDesc);
-                console.log(change.fullDocumentBeforeChange)
-                console.log("updatedTaskData");
+                // console.log(change.fullDocumentBeforeChange)
+                // console.log("updatedTaskData");
+                // const tData = taskCollection.findById(change.documentKey._id).;
+                // console.log(tData);
+                
                 // console.log(updatedTaskData);
                 // const updatetask = {
                 //     _id: change.documentKey._id,
@@ -98,7 +130,7 @@ connection.once("open", () => {
                 if(change.updateDescription.updatedFields.description || change.updateDescription.updatedFields.title){
                     console.log("updatetask");
                     console.log(updatetask);
-                    console.log(updatedTaskData);
+                    // console.log(updatedTaskData);
                     io.of("/socket").emit("updateTask", updatetask);
                 }
                 
@@ -124,34 +156,7 @@ connection.once("open", () => {
 // await client.connect();
 // console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
-const TaskSchema = new mongoose.Schema({
-    title: {
-        type: String,
-        unique: false,
-        required: true,
-    },
-    description: {
-        type: String,
-        unique: false,
-        required: true,
-    },
-    taskOwner: {
-        type: String,
-        unique: false,
-        required: true,
-    },
-    timeStamp: {
-        type: Number,
-        required: true,
-    },
-    category: {
-        type: String,
-        unique: false,
-        required: true,
-    },
-});
 
-const taskCollection = mongoose.model("Tasks", TaskSchema, "Tasks");
 
 
 
@@ -235,6 +240,15 @@ app.put('/taskUpdate/:id', async (req, res) => {
     console.log("update----",container)
     // const query = { _id: new ObjectId(id) };
     const result = await taskCollection.findByIdAndUpdate(id, update);
+    console.log(result)
+    res.send(result);
+})
+
+// /api for get task
+app.get('/getTask/:id', async (req, res) => {
+    const id = req.params.id;
+    // const query = { _id: new ObjectId(id) };
+    const result = await taskCollection.findByIdAndUpdate(id);
     console.log(result)
     res.send(result);
 })
